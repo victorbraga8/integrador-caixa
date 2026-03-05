@@ -67,8 +67,12 @@ async def sync_one(uf: str, _: None = Depends(require_api_key)):
                 csv_text = f.read()
         else:
             trace["steps"].append({"step":"csv_cache_miss"})
-            csv_text, tr = await download_csv_by_uf(uf)
-            trace["steps"].append({"step":"download_csv_done","download_trace":tr})
+            try:
+                csv_text, tr = await download_csv_by_uf(uf)
+                trace["steps"].append({"step":"download_csv_done","download_trace":tr})
+            except Exception as e:
+                trace["steps"].append({"step":"download_csv_failed","error":str(e),"error_type":e.__class__.__name__})
+                raise
             with open(csv_path, "w", encoding="utf-8") as f:
                 f.write(csv_text)
 
